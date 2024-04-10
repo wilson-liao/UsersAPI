@@ -1,0 +1,54 @@
+var mongoose = require('mongoose');
+
+const { isEmail } = require("validator")
+const bcrypt = require("bcrypt");
+
+var loginSchema = new mongoose.Schema({
+    email: {
+        type: String,
+        required: [true, "Please enter email"],
+        unique: true,
+        lowercase: true,
+        validate: [isEmail, 'Please enter valid email']
+    },
+    password: {
+        type: String,
+        required: [true, "Please enter password"]
+    },
+    userInfoID: {
+        type: String
+    }
+});
+
+loginSchema.pre('save', async function (next) {
+    const salt = await bcrypt.genSalt();
+    this.password = await bcrypt.hash(this.password, salt)
+    next();
+})
+
+loginSchema.pre(["updateOne", "findByIdAndUpdate", "findOneAndUpdate"], async function (next) {
+
+    const data = this.getUpdate();
+    const salt = await bcrypt.genSalt();
+    if (data.password) {
+        data.password = await bcrypt.hash(data.password, salt);
+    }
+    next()
+
+});
+
+loginSchema.statics.logUserIn = async function(email,password) {``
+    console.log("start log in")
+    const user = await this.findOne({ email: email });
+    if (user) {
+        console.log('found user')
+        const auth = await bcrypt.compare(password, user.password)
+        if (auth) {
+            return user;
+        }
+        throw Error('Incorrect Password')
+    }
+    throw Error('Incorrect Email')
+}
+
+module.exports = mongoose.model('login', loginSchema);
