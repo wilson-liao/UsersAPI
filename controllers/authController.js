@@ -85,7 +85,7 @@ module.exports.delete_get = async (req, res) => {
 
 module.exports.logout_get = async (req, res) => {
     res.cookie('jwt', '', { maxAge: 1 });
-    res.status(200).send("logged out")
+    res.status(200).json("logged out")
 }
 
 module.exports.update_put = async(req, res) => {
@@ -104,6 +104,7 @@ module.exports.update_put = async(req, res) => {
 }
 
 module.exports.getall = async(req, res) => {
+
     try {
         const entries = await login.find({});
         res.status(200).json(entries)
